@@ -1,3 +1,34 @@
+# ┌── Backend (Python) ────────────────────────────────────────────────────────
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Virtual environments
 venv/
-test.db
+.env
+
+# Local test, coverage, logs
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Database files
+*.db
+
+# ┌── Frontend (Node / Vite) ────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.cache/
+
+# ┌── Infra (Terraform) ───────────────────────────────────────────────────────
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.backup
+infra/terraform.tfstate.lock.hcl
+
+# ┌── General IDE / OS ────────────────────────────────────────────────────────
+.vscode/
 .idea/
+.DS_Store
+Thumbs.db

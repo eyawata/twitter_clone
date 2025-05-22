@@ -16,10 +16,10 @@ provider "aws" {
 resource "aws_dynamodb_table" "users" {
     name         = "Users"
     billing_mode = "PAY_PER_REQUEST"
-    hash_key     = "id"
+    hash_key     = "user_id"
 
     attribute { 
-        name = "id"
+        name = "user_id"
         type = "S" 
     }
 
@@ -49,11 +49,11 @@ resource "aws_dynamodb_table" "users" {
 resource "aws_dynamodb_table" "tweets" {
     name         = "Tweets"
     billing_mode = "PAY_PER_REQUEST"
-    hash_key     = "id"
+    hash_key     = "tweet_id"
     range_key    = "created_at"
 
     attribute { 
-        name = "id"
+        name = "tweet_id"
         type = "S"
         }
 

@@ -3,3 +3,5 @@ uvicorn
 boto3
 passlib
 email-validator
+jose
+python-dotenv

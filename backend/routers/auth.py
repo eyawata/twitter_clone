@@ -4,7 +4,7 @@ import os
 import uuid
 from pathlib import Path
 
-from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Attr, Key
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -56,8 +56,19 @@ def create_access_token(subject: str) -> str:
 
 
 # ─── Routes ─────────────────────────────────────────────────
+
+
+# ───── User Signup (validates unique username and password length) ─────
 @router.post("/signup", response_model=Token, status_code=status.HTTP_201_CREATED)
 def signup(data: SignupIn, users_tbl=Depends(users_table_dep)):
+    resp = users_tbl.query(
+        IndexName="UsernameIndex",
+        KeyConditionExpression=Key("username").eq(data.username),
+        Limit=1,
+    )
+    if resp.get("Count", 0):
+        raise HTTPException(status_code=400, detail="Username already exists")
+
     try:
         user_id = str(uuid.uuid4())
         pwd_hash = pwd_ctx.hash(data.password)
@@ -76,6 +87,7 @@ def signup(data: SignupIn, users_tbl=Depends(users_table_dep)):
     return {"access_token": token}
 
 
+# ───── User Login ─────
 @router.post("/login", response_model=Token)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),

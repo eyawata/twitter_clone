@@ -34,9 +34,9 @@ resource "aws_dynamodb_table" "users" {
     }
 
     global_secondary_index {
-    name            = "UsernameIndex"
-    hash_key        = "username"
-    projection_type = "ALL"
+        name            = "UsernameIndex"
+        hash_key        = "username"
+        projection_type = "ALL"
     }
     global_secondary_index {
         name            = "EmailIndex"
@@ -66,10 +66,22 @@ resource "aws_dynamodb_table" "tweets" {
         name = "user_id"
         type = "S"
         }
+
+    attribute { 
+        name = "username"
+        type = "S"
+        }
     
     global_secondary_index {
         name            = "ByUser"
         hash_key        = "user_id"
+        range_key       = "created_at"
+        projection_type = "ALL"
+    }
+
+    global_secondary_index {
+        name            = "ByUsername"
+        hash_key        = "username"
         range_key       = "created_at"
         projection_type = "ALL"
     }

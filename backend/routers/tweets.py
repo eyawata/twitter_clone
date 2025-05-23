@@ -24,6 +24,7 @@ class TweetIn(BaseModel):
 class TweetOut(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
+    username: str
     text: str
     created_at: datetime
 
@@ -54,6 +55,7 @@ def create_tweet(
         "tweet_id": tweet_id,
         "created_at": created_at,
         "user_id": current_user["user_id"],
+        "username": current_user["username"],
         "text": body.text,
     }
 
@@ -65,41 +67,41 @@ def create_tweet(
     return TweetOut(
         id=uuid.UUID(item["tweet_id"]),
         user_id=uuid.UUID(item["user_id"]),
+        username=item["username"],
         text=item["text"],
         created_at=datetime.fromisoformat(item["created_at"]),
     )
 
-    # ───── Get all tweets by a user (unprotected) ─────
-    # @router.get("/by-user/{username}", response_model=List[TweetOut])
-    # def list_tweets_by_user(
-    #     username: str,
-    #     tweets_tbl=Depends(tweets_table_dep),
-    #     users_tbl=Depends(users_table_dep),
-    # ):
-    #     """
-    #     - Queries tweets for a given user (uses the `ByUser` GSI), newest first
-    #     """
-    #     users_resp = users_tbl.scan()
-    #     if "Item" not in resp:
-    #         raise HTTPException(404, "User not found")
 
-    #     it = resp["Item"]
+# ───── Lists all tweets by user (protected) ─────
+@router.get(
+    "/{username}/",
+    response_model=List[TweetOut],
+)
+def list_tweets_by_user(
+    username: str,
+    tweets_tbl=Depends(tweets_table_dep),
+):
+    """
+    Returns the user's tweets by username, sorted by newest first
+    """
+    response = tweets_tbl.query(
+        IndexName="ByUsername",
+        KeyConditionExpression=Key("username").eq(username),
+        ScanIndexForward=False,
+    )
+    items = response.get("Items", [])
 
-    #     tweets_resp = tweets_tbl.query(
-    #         IndexName="ByUser",
-    #         KeyConditionExpression=Key("user_id").eq(user_id),
-    #         ScanIndexForward=False,  # descending by created_at
-    #     )
-    #     items = tweets_resp.get("Items", [])
-    # return [
-    #     TweetOut(
-    #         id=uuid.UUID(item["tweet_id"]),
-    #         user_id=uuid.UUID(item["user_id"]),
-    #         text=item["text"],
-    #         created_at=datetime.fromisoformat(item["created_at"]),
-    #     )
-    #     for item in items """
-    # ]
+    return [
+        TweetOut(
+            id=uuid.UUID(item["tweet_id"]),
+            user_id=uuid.UUID(item["user_id"]),
+            username=item["username"],
+            text=item["text"],
+            created_at=datetime.fromisoformat(item["created_at"]),
+        )
+        for item in items
+    ]
 
 
 # ───── Get a tweet (unprotected) ─────
@@ -112,16 +114,17 @@ def read_tweet(
     """
     - Fetches a tweet by its composite key (id + created_at)
     """
-    resp = tweets_tbl.get_item(Key={"tweet_id": tweet_id, "created_at": created_at})
-    if "Item" not in resp:
+    response = tweets_tbl.get_item(Key={"tweet_id": tweet_id, "created_at": created_at})
+    if "Item" not in response:
         raise HTTPException(404, "Tweet not found")
 
-    it = resp["Item"]
+    item = response["Item"]
     return TweetOut(
-        id=uuid.UUID(it["tweet_id"]),
-        user_id=uuid.UUID(it["user_id"]),
-        text=it["text"],
-        created_at=datetime.fromisoformat(it["created_at"]),
+        id=uuid.UUID(item["tweet_id"]),
+        user_id=uuid.UUID(item["user_id"]),
+        username=item["username"],
+        text=item["text"],
+        created_at=datetime.fromisoformat(item["created_at"]),
     )
 
 
@@ -131,13 +134,14 @@ def list_tweets(tweets_tbl=Depends(tweets_table_dep)):
     """
     - Scans and returns *all* tweets
     """
-    resp = tweets_tbl.scan()
-    items = resp.get("Items", [])
+    response = tweets_tbl.scan()
+    items = response.get("Items", [])
 
     return [
         TweetOut(
             id=uuid.UUID(item["tweet_id"]),
             user_id=uuid.UUID(item["user_id"]),
+            username=item["username"],
             text=item["text"],
             created_at=datetime.fromisoformat(item["created_at"]),
         )
@@ -158,17 +162,18 @@ def list_my_tweets(
     """
     Returns the authenticated user’s tweets, newest first.
     """
-    resp = tweets_tbl.query(
+    response = tweets_tbl.query(
         IndexName="ByUser",
         KeyConditionExpression=Key("user_id").eq(current_user["user_id"]),
         ScanIndexForward=False,
     )
-    items = resp.get("Items", [])
+    items = response.get("Items", [])
 
     return [
         TweetOut(
             id=uuid.UUID(item["tweet_id"]),
             user_id=uuid.UUID(item["user_id"]),
+            username=item["username"],
             text=item["text"],
             created_at=datetime.fromisoformat(item["created_at"]),
         )

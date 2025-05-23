@@ -86,3 +86,46 @@ resource "aws_dynamodb_table" "tweets" {
         projection_type = "ALL"
     }
 }
+
+
+# ───── Follows ─────
+resource "aws_dynamodb_table" "follows" {
+    name         = "Follows"
+    billing_mode = "PAY_PER_REQUEST"
+    hash_key     = "follow_id"
+    range_key    = "created_at"
+
+    attribute { 
+        name = "follow_id"
+        type = "S"
+        }
+
+    attribute { 
+        name = "follower_username"
+        type = "S"
+        }
+
+    attribute { 
+        name = "following_username"
+        type = "S"
+        }
+
+    attribute { 
+        name = "created_at"
+        type = "S"
+        }
+    
+    global_secondary_index {
+        name            = "ByFollowerUser"
+        hash_key        = "follower_username"
+        range_key       = "created_at"
+        projection_type = "ALL"
+    }
+
+    global_secondary_index {
+        name            = "ByFollowingUser"
+        hash_key        = "following_username"
+        range_key       = "created_at"
+        projection_type = "ALL"
+    }
+}

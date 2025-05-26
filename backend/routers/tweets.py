@@ -73,9 +73,9 @@ def create_tweet(
     )
 
 
-# ───── Lists all tweets by user (protected) ─────
+# ───── Lists all tweets by user (unprotected) ─────
 @router.get(
-    "/{username}/",
+    "/{username}/timelines/tweets",
     response_model=List[TweetOut],
 )
 def list_tweets_by_user(
@@ -105,7 +105,7 @@ def list_tweets_by_user(
 
 
 # ───── Get a tweet (unprotected) ─────
-@router.get("/{tweet_id}/{created_at}", response_model=TweetOut)
+@router.get("/{tweet_id}", response_model=TweetOut)
 def read_tweet(
     tweet_id: str,
     created_at: str,
